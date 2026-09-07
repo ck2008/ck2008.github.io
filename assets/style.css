@@ -1,4 +1,5 @@
 :root{
+  --topbar-h:56px;
   --bg:#f6f7fb; --panel:#ffffff; --panel-2:#f1f3f9; --text:#171a21; --muted:#6b7280;
   --line:#e4e7ee; --brand:#4f46e5; --brand-ink:#ffffff; --danger:#dc2626;
   --shadow:0 1px 2px rgba(16,24,40,.05), 0 8px 24px -12px rgba(16,24,40,.18);
@@ -32,7 +33,20 @@ a{color:inherit;text-decoration:none}
 /* ---------- 版面 ---------- */
 .app{min-height:100dvh;display:flex;flex-direction:column}
 .topbar{display:flex;align-items:center;gap:20px;padding:0 20px;height:56px;
-  background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+
+/* 功能列：未釘選時收到畫面上緣，滑到最上面才滑下來。
+   收起時 --topbar-h 歸零，側欄和左緣觸發區的頂端偏移會一起跟上。 */
+.app:not(.is-topbar-pinned){--topbar-h:0px}
+.app:not(.is-topbar-pinned) .topbar{
+  position:fixed;top:0;left:0;right:0;
+  transform:translateY(-100%);transition:transform .16s ease}
+.app:not(.is-topbar-pinned).is-topbar-peek .topbar{transform:none;box-shadow:var(--shadow)}
+.top-trigger{position:fixed;top:0;left:0;right:0;height:12px;z-index:9}
+.app.is-topbar-pinned .top-trigger{display:none}
+@media (prefers-reduced-motion:reduce){
+  .app:not(.is-topbar-pinned) .topbar{transition:none}
+}
 .btn-menu{border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;
   padding:7px 9px;border-radius:8px;margin-left:-6px}
 .btn-menu:hover{background:var(--panel-2);color:var(--text)}
@@ -50,15 +64,15 @@ a{color:inherit;text-decoration:none}
 /* 未釘選：側欄不佔版面，滑過左緣或 ☰ 才浮出來蓋在內容上 */
 .app:not(.is-pinned) .layout{grid-template-columns:1fr}
 .app:not(.is-pinned) .sidebar{
-  position:fixed;left:0;top:56px;bottom:0;height:auto;width:230px;z-index:8;
+  position:fixed;left:0;top:var(--topbar-h);bottom:0;height:auto;width:230px;z-index:8;
   box-shadow:var(--shadow);transform:translateX(-100%);transition:transform .16s ease}
 .app:not(.is-pinned).is-peek .sidebar{transform:none}
-.edge-trigger{position:fixed;left:0;top:56px;bottom:0;width:12px;z-index:7}
+.edge-trigger{position:fixed;left:0;top:var(--topbar-h);bottom:0;width:12px;z-index:7}
 .app.is-pinned .edge-trigger{display:none}
 @media (prefers-reduced-motion:reduce){
   .app:not(.is-pinned) .sidebar{transition:none}
 }
-.sidebar{position:sticky;top:56px;align-self:start;height:calc(100dvh - 56px);overflow:auto;
+.sidebar{position:sticky;top:var(--topbar-h);align-self:start;height:calc(100dvh - var(--topbar-h));overflow:auto;
   padding:18px 12px;border-right:1px solid var(--line);background:var(--panel)}
 .sidebar-head{display:flex;align-items:center;justify-content:space-between;padding:0 8px 8px}
 .sidebar-tools{display:flex;align-items:center;gap:2px}
@@ -157,7 +171,7 @@ a{color:inherit;text-decoration:none}
 
 @media (max-width:760px){
   .layout{grid-template-columns:1fr}
-  .sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .sidebar{height:auto;border-right:0}
   .cat-list{flex-direction:row;flex-wrap:wrap}
   .cat-item{width:auto}
   .content{padding:18px 16px 40px}

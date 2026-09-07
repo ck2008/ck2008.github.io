@@ -101,21 +101,68 @@
     else setPeek(!app.classList.contains('is-peek'));
   });
 
-  /* 用單一的游標位置判定，不要對 edgeTrigger 掛 mouseleave：
-     側欄一浮出來就蓋住了觸發區，會馬上收到 mouseleave 而自動收回。
-     開啟後把感應區從 12px 擴大到側欄寬度，游標移進側欄才不會被判定成離開。 */
+  /* ---------- 上方功能列 ----------
+     跟側欄同一套：釘選＝固定在最上面；未釘選＝收起來，滑到畫面上緣才滑下來。 */
+  const btnTopPin = $('#btnTopPin');
+  const topTrigger = $('#topTrigger');
+  let topPinned = false;
+  let topTimer;
+
+  function setTopPeek(on) {
+    app.classList.toggle('is-topbar-peek', on && !topPinned);
+  }
+
+  function applyTopPinned(on) {
+    topPinned = on;
+    app.classList.toggle('is-topbar-pinned', on);
+    btnTopPin.classList.toggle('is-on', on);
+    btnTopPin.setAttribute('aria-pressed', String(on));
+    btnTopPin.title = on ? '取消釘選，改成滑到上緣才顯示' : '釘選功能列';
+    if (on) app.classList.remove('is-topbar-peek');
+    try { localStorage.setItem('wb-topbar-pinned', on ? 'yes' : 'no'); } catch {}
+  }
+
+  try { topPinned = localStorage.getItem('wb-topbar-pinned') === 'yes'; } catch {}
+  applyTopPinned(topPinned);
+  btnTopPin.addEventListener('click', () => applyTopPinned(!topPinned));
+
+  /* 用單一的游標位置判定，不要對觸發區掛 mouseleave：
+     面板一浮出來就蓋住了觸發區，會馬上收到 mouseleave 而自動收回。
+     開啟後把感應區擴大到面板本身的大小，游標移進去才不會被判定成離開。 */
   const TOPBAR = 56, EDGE = 14, PANEL = 240;
   document.addEventListener('mousemove', (e) => {
-    if (pinned) return;
-    const open = app.classList.contains('is-peek');
-    const inZone = e.clientY > TOPBAR && e.clientX < (open ? PANEL : EDGE);
-    if (inZone || btnMenu.contains(e.target)) {
-      clearTimeout(peekTimer);
-      setPeek(true);
-    } else if (open) {
-      clearTimeout(peekTimer);
-      peekTimer = setTimeout(() => setPeek(false), 200);
+    if (!topPinned) {
+      const open = app.classList.contains('is-topbar-peek');
+      if (e.clientY < (open ? TOPBAR : EDGE)) {
+        clearTimeout(topTimer);
+        setTopPeek(true);
+      } else if (open) {
+        clearTimeout(topTimer);
+        topTimer = setTimeout(() => setTopPeek(false), 200);
+      }
     }
+
+    if (!pinned) {
+      const open = app.classList.contains('is-peek');
+      // 功能列收起來時側欄的頂端就在 0，感應區要跟著往上延伸
+      const top = topPinned ? TOPBAR : 0;
+      const inZone = e.clientY > top && e.clientX < (open ? PANEL : EDGE);
+      if (inZone || btnMenu.contains(e.target)) {
+        clearTimeout(peekTimer);
+        setPeek(true);
+      } else if (open) {
+        clearTimeout(peekTimer);
+        peekTimer = setTimeout(() => setPeek(false), 200);
+      }
+    }
+  });
+
+  // 觸控裝置沒有 hover，點一下觸發區就當作開關
+  topTrigger.addEventListener('click', () => {
+    if (!topPinned) setTopPeek(!app.classList.contains('is-topbar-peek'));
+  });
+  edgeTrigger.addEventListener('click', () => {
+    if (!pinned) setPeek(!app.classList.contains('is-peek'));
   });
 
   // 拖曳中不會有 mousemove，要靠 dragenter 才能把書籤拖到收起來的側欄
