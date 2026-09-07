@@ -14,6 +14,8 @@
 ## 使用
 
 - 左側是類別，含「全部書籤」「最愛」，以及有未歸類書籤時才出現的「未分類」。
+  左上角的 ☰ 可收合／展開這欄，狀態記在瀏覽器的 localStorage，重新整理後保持。
+  收合時沒有拖曳目標，要搬類別請先展開。
 - **拖曳搬移**：把書籤卡片拖到左側任一類別即可改歸屬；拖到「最愛」是加入最愛，
   拖到「未分類」是清掉類別。「全部書籤」不是實際歸屬，不接受放置。
   用的是 HTML5 drag and drop，觸控裝置沒有這個行為，請改用卡片上的 ✎ 編輯。
@@ -88,6 +90,6 @@ python -m http.server 5173
 
 推上 `main` 後 GitHub Pages 會自動建置（約 1 分鐘）。
 
-`index.html` 引用資產時帶了版本參數（`assets/app.js?v=6`）。GitHub Pages 對靜態檔的
+`index.html` 引用資產時帶了版本參數（`assets/app.js?v=7`）。GitHub Pages 對靜態檔的
 `Cache-Control` 是 `max-age=600`，改了 JS/CSS 若不換版本號，瀏覽器會有最多 10 分鐘
 拿到舊檔。**每次改動 `assets/` 或 `config.js` 時請一併把 `?v=` 加一。**

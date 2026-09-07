@@ -63,6 +63,19 @@
     : window.matchMedia('(prefers-color-scheme: dark)').matches);
   themeToggle.addEventListener('change', () => applyTheme(themeToggle.checked));
 
+  // ---------- 側邊選單開合 ----------
+  const btnMenu = $('#btnMenu');
+  function applySidebar(open) {
+    app.classList.toggle('is-collapsed', !open);
+    btnMenu.setAttribute('aria-expanded', String(open));
+    btnMenu.title = open ? '隱藏類別' : '顯示類別';
+    try { localStorage.setItem('wb-sidebar', open ? 'open' : 'closed'); } catch {}
+  }
+  let sidebarOpen = true;
+  try { sidebarOpen = localStorage.getItem('wb-sidebar') !== 'closed'; } catch {}
+  applySidebar(sidebarOpen);
+  btnMenu.addEventListener('click', () => applySidebar(app.classList.contains('is-collapsed')));
+
   // ---------- 認證 ----------
   $('#btnLogin').addEventListener('click', async () => {
     gateError.hidden = true;
