@@ -367,13 +367,10 @@
     await loadAll();
   });
 
-  categoryForm.querySelector('[data-delete]').addEventListener('click', async () => {
-    if (!editingCategory) return;
+  armDelete(categoryForm, () => {
     const n = countFor(editingCategory.id);
-    const msg = n
-      ? `確定刪除類別「${editingCategory.name}」？該類別下的 ${n} 筆書籤會變成「未分類」。`
-      : `確定刪除類別「${editingCategory.name}」？`;
-    if (!confirm(msg)) return;
+    return n ? `確定刪除？${n} 筆書籤會變成未分類` : '確定刪除？';
+  }, async () => {
     const { error } = await sb.from('categories').delete().eq('id', editingCategory.id);
     if (error) return showError(categoryForm, error.message);
     if (state.activeCategory === editingCategory.id) state.activeCategory = 'all';
@@ -445,9 +442,7 @@
     await loadAll();
   });
 
-  bookmarkForm.querySelector('[data-delete]').addEventListener('click', async () => {
-    if (!editingBookmark) return;
-    if (!confirm(`確定刪除書籤「${editingBookmark.title}」？`)) return;
+  armDelete(bookmarkForm, () => '確定刪除？', async () => {
     const { error } = await sb.from('bookmarks').delete().eq('id', editingBookmark.id);
     if (error) return showError(bookmarkForm, error.message);
     bookmarkDialog.close();
@@ -462,6 +457,37 @@
   });
 
   // ---------- 對話框共用 ----------
+
+  /* 刪除採頁內二次確認：第一次點擊把按鈕換成確認字樣，
+     第二次才真的刪除。避免用 confirm() 跳原生對話框。 */
+  function armDelete(form, message, run) {
+    const btn = form.querySelector('[data-delete]');
+    const label = btn.textContent;
+    let armed = false;
+    let timer;
+
+    const disarm = () => {
+      armed = false;
+      clearTimeout(timer);
+      btn.textContent = label;
+      btn.classList.remove('is-armed');
+    };
+    form.addEventListener('reset', disarm);
+    form.closest('dialog').addEventListener('close', disarm);
+
+    btn.addEventListener('click', async () => {
+      if (!armed) {
+        armed = true;
+        btn.textContent = message();
+        btn.classList.add('is-armed');
+        timer = setTimeout(disarm, 5000);   // 沒有第二次點擊就自動還原
+        return;
+      }
+      disarm();
+      await run();
+    });
+  }
+
   for (const form of [categoryForm, bookmarkForm]) {
     form.querySelector('[data-cancel]').addEventListener('click', () => form.closest('dialog').close());
   }
