@@ -26,6 +26,8 @@
   點進單一類別則是單純的一格清單。段內順序仍照右上角的排序選單。
 - 搜尋列右邊的「🖼 圖示」可切換卡片上的網站圖示，**預設關閉**，狀態記在 localStorage。
   關閉時連 `<img>` 都不會建立，所以不會對 Google 的 favicon 服務發出任何請求。
+- 每次點開書籤都會計次。「全部書籤」標題正下方有「🔥 熱門書籤 前 12 名」，
+  依點擊次數排序，卡片上會標示次數。還沒有任何點擊、或正在搜尋時不顯示這一段。
 - 卡片右上角 ✎ 可編輯或刪除；類別列 hover 後的 ✎ 可編輯或刪除類別。
 - 刪除是兩段式：第一次點「刪除」會變成「確定刪除？」，再點一次才真的刪。
 
@@ -53,6 +55,8 @@ create table public.bookmarks (
   description text,
   tags        text[] default '{}',
   is_favorite boolean not null default false,
+  click_count int  not null default 0,       -- 開啟次數
+  last_clicked_at timestamptz,
   sort_order  int  not null default 0,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
@@ -73,6 +77,19 @@ create policy cat_owner_all on public.categories
 create policy bm_owner_all on public.bookmarks
   for all to authenticated using (public.is_owner()) with check (public.is_owner());
 ```
+
+計次用一個 RPC，讓資料庫自己做 +1，避免前端先讀再寫算漏：
+
+```sql
+create function public.bump_bookmark_click(p_id bigint) returns void language sql as $$
+  update public.bookmarks
+     set click_count = click_count + 1, last_clicked_at = now()
+   where id = p_id;
+$$;
+grant execute on function public.bump_bookmark_click(bigint) to authenticated;
+```
+
+它是 security invoker，一樣受 RLS 管，所以只有擁有者能加自己的計數。
 
 anon key 雖然公開在前端，但沒有通過上述 policy 的請求一律讀不到任何資料。
 
@@ -95,6 +112,6 @@ python -m http.server 5173
 
 推上 `main` 後 GitHub Pages 會自動建置（約 1 分鐘）。
 
-`index.html` 引用資產時帶了版本參數（`assets/app.js?v=11`）。GitHub Pages 對靜態檔的
+`index.html` 引用資產時帶了版本參數（`assets/app.js?v=12`）。GitHub Pages 對靜態檔的
 `Cache-Control` 是 `max-age=600`，改了 JS/CSS 若不換版本號，瀏覽器會有最多 10 分鐘
 拿到舊檔。**每次改動 `assets/` 或 `config.js` 時請一併把 `?v=` 加一。**

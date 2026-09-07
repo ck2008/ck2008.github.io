@@ -432,6 +432,8 @@
       return;
     }
 
+    if (state.activeCategory === 'all') host.append(hotSection());
+
     // 跨類別的檢視：照類別順序分段，未分類擺最後，每段自成一列
     const groups = [...state.categories, { id: null, name: '未分類', icon: '📭' }];
     for (const g of groups) {
@@ -441,10 +443,51 @@
     }
   }
 
-  function bookmarkGrid(rows) {
+  const HOT_LIMIT = 12;
+
+  function hotRows() {
+    return state.bookmarks
+      .filter((b) => (b.click_count || 0) > 0)
+      .sort((a, b) => (b.click_count - a.click_count) || (a.id - b.id))
+      .slice(0, HOT_LIMIT);
+  }
+
+  /* 熱門書籤放在「全部書籤」標題正下方。搜尋中就不顯示 —— 那時候你要找的是
+     特定一筆，固定的排行榜只會擋路。還沒有人被點過也不顯示，避免一整排 0。 */
+  function hotSection() {
+    const sec = document.createElement('section');
+    sec.className = 'group';
+    sec.id = 'hotSection';
+    if (state.query) return sec;
+
+    const rows = hotRows();
+    if (!rows.length) return sec;
+
+    const h = document.createElement('h3');
+    h.className = 'group-title';
+    const ico = document.createElement('span');
+    ico.textContent = '🔥';
+    const nm = document.createElement('span');
+    nm.textContent = `熱門書籤 前 ${HOT_LIMIT} 名`;
+    const cnt = document.createElement('span');
+    cnt.className = 'group-count';
+    cnt.textContent = rows.length;
+    h.append(ico, nm, cnt);
+
+    sec.append(h, bookmarkGrid(rows, { showCount: true }));
+    return sec;
+  }
+
+  // 點擊後只換掉熱門那一段，不用整頁重畫
+  function renderHot() {
+    const old = document.getElementById('hotSection');
+    if (old) old.replaceWith(hotSection());
+  }
+
+  function bookmarkGrid(rows, opts) {
     const grid = document.createElement('div');
     grid.className = 'grid';
-    for (const b of rows) grid.append(bookmarkCard(b));
+    for (const b of rows) grid.append(bookmarkCard(b, opts));
     return grid;
   }
 
@@ -468,7 +511,7 @@
     return sec;
   }
 
-  function bookmarkCard(b) {
+  function bookmarkCard(b, opts) {
     const card = document.createElement('div');
     card.className = 'card';
     card.draggable = true;
@@ -500,6 +543,8 @@
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     link.draggable = false;  // 連結預設可拖，會變成拖網址而不是拖卡片
+    link.addEventListener('click', () => bumpClick(b));
+    link.addEventListener('auxclick', (e) => { if (e.button === 1) bumpClick(b); });  // 中鍵開新分頁
     const t = document.createElement('span');
     t.textContent = b.title;
     link.append(t);
@@ -515,6 +560,13 @@
     host.textContent = hostOf(b.url);
 
     body.append(link, host);
+
+    if (opts && opts.showCount) {
+      const hits = document.createElement('span');
+      hits.className = 'card-hits';
+      hits.textContent = `${b.click_count} 次`;
+      host.append(' · ', hits);
+    }
 
     if (b.description) {
       const d = document.createElement('div');
@@ -556,6 +608,15 @@
     if (img) card.append(img);
     card.append(body, tools);
     return card;
+  }
+
+  /* 點擊計數。用 RPC 讓資料庫自己做 +1，避免先讀再寫可能算漏。
+     連結是 target=_blank，本頁不會離開，所以請求送得出去。 */
+  async function bumpClick(b) {
+    b.click_count = (b.click_count || 0) + 1;
+    renderHot();
+    const { error } = await sb.rpc('bump_bookmark_click', { p_id: b.id });
+    if (error) console.error(error);
   }
 
   async function toggleFavorite(b) {
