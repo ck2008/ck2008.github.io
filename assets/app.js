@@ -368,9 +368,10 @@
   });
 
   armDelete(categoryForm, () => {
-    const n = countFor(editingCategory.id);
+    const n = editingCategory ? countFor(editingCategory.id) : 0;
     return n ? `確定刪除？${n} 筆書籤會變成未分類` : '確定刪除？';
   }, async () => {
+    if (!editingCategory) return;
     const { error } = await sb.from('categories').delete().eq('id', editingCategory.id);
     if (error) return showError(categoryForm, error.message);
     if (state.activeCategory === editingCategory.id) state.activeCategory = 'all';
@@ -443,6 +444,7 @@
   });
 
   armDelete(bookmarkForm, () => '確定刪除？', async () => {
+    if (!editingBookmark) return;
     const { error } = await sb.from('bookmarks').delete().eq('id', editingBookmark.id);
     if (error) return showError(bookmarkForm, error.message);
     bookmarkDialog.close();
@@ -464,15 +466,13 @@
     const btn = form.querySelector('[data-delete]');
     const label = btn.textContent;
     let armed = false;
-    let timer;
 
     const disarm = () => {
       armed = false;
-      clearTimeout(timer);
       btn.textContent = label;
       btn.classList.remove('is-armed');
     };
-    form.addEventListener('reset', disarm);
+    // 對話框是 modal，關掉就重置，不需要另外設定超時
     form.closest('dialog').addEventListener('close', disarm);
 
     btn.addEventListener('click', async () => {
@@ -480,7 +480,6 @@
         armed = true;
         btn.textContent = message();
         btn.classList.add('is-armed');
-        timer = setTimeout(disarm, 5000);   // 沒有第二次點擊就自動還原
         return;
       }
       disarm();
