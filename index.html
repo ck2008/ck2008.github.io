@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>工作台 · 書籤</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
-<link rel="stylesheet" href="assets/style.css?v=7">
+<link rel="stylesheet" href="assets/style.css?v=8">
 </head>
 <body>
 
@@ -58,6 +58,7 @@
           <input id="search" type="search" placeholder="搜尋標題、網址、說明、標籤…" autocomplete="off">
         </div>
         <div class="content-actions">
+          <button id="iconToggle" class="btn btn-toggle" aria-pressed="false">🖼 圖示</button>
           <select id="sortBy" class="select" title="排序">
             <option value="sort">自訂順序</option>
             <option value="title">標題</option>
@@ -119,7 +120,7 @@
 <div id="toast" class="toast" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=7"></script>
-<script src="assets/app.js?v=7"></script>
+<script src="config.js?v=8"></script>
+<script src="assets/app.js?v=8"></script>
 </body>
 </html>

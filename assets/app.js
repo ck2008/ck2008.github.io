@@ -29,6 +29,7 @@
     activeCategory: 'all',   // 'all' | 'fav' | 'none' | <id>
     query: '',
     sortBy: 'sort',
+    showIcons: false,        // 網站圖示預設不顯示
   };
 
   // ---------- 小工具 ----------
@@ -75,6 +76,23 @@
   try { sidebarOpen = localStorage.getItem('wb-sidebar') !== 'closed'; } catch {}
   applySidebar(sidebarOpen);
   btnMenu.addEventListener('click', () => applySidebar(app.classList.contains('is-collapsed')));
+
+  // ---------- 網站圖示開關 ----------
+  const iconToggle = $('#iconToggle');
+  function applyIcons(on) {
+    state.showIcons = on;
+    iconToggle.classList.toggle('is-on', on);
+    iconToggle.setAttribute('aria-pressed', String(on));
+    iconToggle.title = on ? '隱藏網站圖示' : '顯示網站圖示';
+    try { localStorage.setItem('wb-icons', on ? 'on' : 'off'); } catch {}
+  }
+  let iconsOn = false;
+  try { iconsOn = localStorage.getItem('wb-icons') === 'on'; } catch {}
+  applyIcons(iconsOn);
+  iconToggle.addEventListener('click', () => {
+    applyIcons(!state.showIcons);
+    renderBookmarks();
+  });
 
   // ---------- 認證 ----------
   $('#btnLogin').addEventListener('click', async () => {
@@ -361,12 +379,16 @@
     });
     card.addEventListener('dragend', () => card.classList.remove('is-dragging'));
 
-    const img = document.createElement('img');
-    img.className = 'card-icon';
-    img.src = faviconOf(b.url);
-    img.alt = '';
-    img.loading = 'lazy';
-    img.draggable = false;   // 圖片預設可拖，會蓋掉卡片的拖曳
+    // 關掉時連 img 都不建，省下每張卡片對 Google favicon 服務的請求
+    let img = null;
+    if (state.showIcons) {
+      img = document.createElement('img');
+      img.className = 'card-icon';
+      img.src = faviconOf(b.url);
+      img.alt = '';
+      img.loading = 'lazy';
+      img.draggable = false;   // 圖片預設可拖，會蓋掉卡片的拖曳
+    }
 
     const body = document.createElement('div');
     body.className = 'card-body';
@@ -430,7 +452,8 @@
     editBtn.addEventListener('click', () => openBookmarkDialog(b));
 
     tools.append(favBtn, editBtn);
-    card.append(img, body, tools);
+    if (img) card.append(img);
+    card.append(body, tools);
     return card;
   }
 

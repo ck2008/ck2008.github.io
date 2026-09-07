@@ -21,6 +21,8 @@
   用的是 HTML5 drag and drop，觸控裝置沒有這個行為，請改用卡片上的 ✎ 編輯。
 - 「全部書籤」和「最愛」會照類別順序分段顯示，每個類別自成一段並換行；
   點進單一類別則是單純的一格清單。段內順序仍照右上角的排序選單。
+- 搜尋列右邊的「🖼 圖示」可切換卡片上的網站圖示，**預設關閉**，狀態記在 localStorage。
+  關閉時連 `<img>` 都不會建立，所以不會對 Google 的 favicon 服務發出任何請求。
 - 卡片右上角 ✎ 可編輯或刪除；類別列 hover 後的 ✎ 可編輯或刪除類別。
 - 刪除是兩段式：第一次點「刪除」會變成「確定刪除？」，再點一次才真的刪。
 
@@ -90,6 +92,6 @@ python -m http.server 5173
 
 推上 `main` 後 GitHub Pages 會自動建置（約 1 分鐘）。
 
-`index.html` 引用資產時帶了版本參數（`assets/app.js?v=7`）。GitHub Pages 對靜態檔的
+`index.html` 引用資產時帶了版本參數（`assets/app.js?v=8`）。GitHub Pages 對靜態檔的
 `Cache-Control` 是 `max-age=600`，改了 JS/CSS 若不換版本號，瀏覽器會有最多 10 分鐘
 拿到舊檔。**每次改動 `assets/` 或 `config.js` 時請一併把 `?v=` 加一。**
