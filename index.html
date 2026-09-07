@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工作台 · 書籤</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- 登入畫面 -->
+<div id="gate" class="gate" hidden>
+  <div class="gate-card">
+    <div class="gate-logo">🗂️</div>
+    <h1>個人工作台</h1>
+    <p>請使用 GitHub 帳號登入以檢視與維護書籤。</p>
+    <button id="btnLogin" class="btn btn-primary btn-lg">
+      <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      使用 GitHub 登入
+    </button>
+    <p id="gateError" class="gate-error" hidden></p>
+  </div>
+</div>
+
+<!-- 主畫面 -->
+<div id="app" class="app" hidden>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">🗂️</span><span>工作台</span></div>
+    <nav class="tabs">
+      <button class="tab is-active" data-page="bookmarks">書籤</button>
+    </nav>
+    <div class="topbar-right">
+      <label class="switch" title="深色模式">
+        <input type="checkbox" id="themeToggle"><span class="switch-track"></span>
+      </label>
+      <div class="user">
+        <img id="userAvatar" alt="" width="28" height="28">
+        <span id="userName"></span>
+      </div>
+      <button id="btnLogout" class="btn btn-ghost">登出</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <h2>類別</h2>
+        <button id="btnAddCategory" class="btn btn-icon" title="新增類別">＋</button>
+      </div>
+      <ul id="categoryList" class="cat-list"></ul>
+    </aside>
+
+    <section class="content">
+      <div class="content-head">
+        <div class="search">
+          <input id="search" type="search" placeholder="搜尋標題、網址、說明、標籤…" autocomplete="off">
+        </div>
+        <div class="content-actions">
+          <select id="sortBy" class="select" title="排序">
+            <option value="sort">自訂順序</option>
+            <option value="title">標題</option>
+            <option value="newest">最新加入</option>
+          </select>
+          <button id="btnAddBookmark" class="btn btn-primary">＋ 新增書籤</button>
+        </div>
+      </div>
+      <h1 id="viewTitle" class="view-title">全部書籤</h1>
+      <div id="grid" class="grid"></div>
+      <div id="empty" class="empty" hidden></div>
+    </section>
+  </main>
+</div>
+
+<!-- 類別 Modal -->
+<dialog id="categoryDialog" class="dialog">
+  <form id="categoryForm" method="dialog">
+    <h3 id="categoryDialogTitle">新增類別</h3>
+    <label>名稱<input name="name" required maxlength="40" autocomplete="off"></label>
+    <div class="row">
+      <label>圖示 (emoji)<input name="icon" maxlength="4" placeholder="📁" autocomplete="off"></label>
+      <label>顏色<input name="color" type="color" value="#6366f1"></label>
+      <label>順序<input name="sort_order" type="number" value="0" step="1"></label>
+    </div>
+    <p class="form-error" data-error hidden></p>
+    <footer>
+      <button type="button" class="btn btn-danger" data-delete hidden>刪除</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-ghost" data-cancel>取消</button>
+      <button type="submit" class="btn btn-primary">儲存</button>
+    </footer>
+  </form>
+</dialog>
+
+<!-- 書籤 Modal -->
+<dialog id="bookmarkDialog" class="dialog">
+  <form id="bookmarkForm" method="dialog">
+    <h3 id="bookmarkDialogTitle">新增書籤</h3>
+    <label>網址<input name="url" type="url" required placeholder="https://example.com" autocomplete="off"></label>
+    <label>標題<input name="title" required maxlength="120" autocomplete="off"></label>
+    <label>說明<textarea name="description" rows="2" maxlength="300"></textarea></label>
+    <div class="row">
+      <label>類別<select name="category_id" class="select"></select></label>
+      <label>順序<input name="sort_order" type="number" value="0" step="1"></label>
+    </div>
+    <label>標籤（以逗號分隔）<input name="tags" placeholder="工作, 文件" autocomplete="off"></label>
+    <label class="check"><input name="is_favorite" type="checkbox"> 加入最愛</label>
+    <p class="form-error" data-error hidden></p>
+    <footer>
+      <button type="button" class="btn btn-danger" data-delete hidden>刪除</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-ghost" data-cancel>取消</button>
+      <button type="submit" class="btn btn-primary">儲存</button>
+    </footer>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
