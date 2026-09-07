@@ -101,12 +101,25 @@
     else setPeek(!app.classList.contains('is-peek'));
   });
 
+  /* 用單一的游標位置判定，不要對 edgeTrigger 掛 mouseleave：
+     側欄一浮出來就蓋住了觸發區，會馬上收到 mouseleave 而自動收回。
+     開啟後把感應區從 12px 擴大到側欄寬度，游標移進側欄才不會被判定成離開。 */
+  const TOPBAR = 56, EDGE = 14, PANEL = 240;
+  document.addEventListener('mousemove', (e) => {
+    if (pinned) return;
+    const open = app.classList.contains('is-peek');
+    const inZone = e.clientY > TOPBAR && e.clientX < (open ? PANEL : EDGE);
+    if (inZone || btnMenu.contains(e.target)) {
+      clearTimeout(peekTimer);
+      setPeek(true);
+    } else if (open) {
+      clearTimeout(peekTimer);
+      peekTimer = setTimeout(() => setPeek(false), 200);
+    }
+  });
+
+  // 拖曳中不會有 mousemove，要靠 dragenter 才能把書籤拖到收起來的側欄
   for (const el of [btnMenu, sidebarEl, edgeTrigger]) {
-    el.addEventListener('mouseenter', () => { clearTimeout(peekTimer); setPeek(true); });
-    el.addEventListener('mouseleave', () => {
-      peekTimer = setTimeout(() => setPeek(false), 250);   // 留一點時間讓滑鼠移過去
-    });
-    // 拖曳中不會觸發 mouseenter，要靠 dragenter 才能把書籤拖到收起來的側欄
     el.addEventListener('dragenter', () => { clearTimeout(peekTimer); setPeek(true); });
   }
 
