@@ -88,6 +88,6 @@ python -m http.server 5173
 
 推上 `main` 後 GitHub Pages 會自動建置（約 1 分鐘）。
 
-`index.html` 引用資產時帶了版本參數（`assets/app.js?v=5`）。GitHub Pages 對靜態檔的
+`index.html` 引用資產時帶了版本參數（`assets/app.js?v=6`）。GitHub Pages 對靜態檔的
 `Cache-Control` 是 `max-age=600`，改了 JS/CSS 若不換版本號，瀏覽器會有最多 10 分鐘
 拿到舊檔。**每次改動 `assets/` 或 `config.js` 時請一併把 `?v=` 加一。**

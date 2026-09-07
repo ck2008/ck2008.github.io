@@ -322,11 +322,9 @@
 
     const h = document.createElement('h3');
     h.className = 'group-title';
-    if (category.icon) {
-      const ico = document.createElement('span');
-      ico.textContent = category.icon;
-      h.append(ico);
-    }
+    const ico = document.createElement('span');
+    ico.textContent = category.icon || '📁';   // 與側欄用同一個預設圖示
+    h.append(ico);
     const nm = document.createElement('span');
     nm.textContent = category.name;
     const cnt = document.createElement('span');
