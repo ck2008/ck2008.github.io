@@ -185,8 +185,63 @@
       renderBookmarks();
     });
 
+    // 拖曳目標：把書籤卡片拖到這一列就換類別。「全部書籤」不是實際歸屬，不收。
+    if (key !== 'all') {
+      const isOurDrag = (e) => e.dataTransfer.types.includes(DRAG_TYPE);
+
+      btn.addEventListener('dragenter', (e) => {
+        if (!isOurDrag(e)) return;
+        e.preventDefault();
+        btn.classList.add('is-drop');
+      });
+      btn.addEventListener('dragover', (e) => {
+        if (!isOurDrag(e)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      });
+      // dragleave 也會在移到子元素時觸發，所以要確認真的離開整列
+      btn.addEventListener('dragleave', (e) => {
+        if (!btn.contains(e.relatedTarget)) btn.classList.remove('is-drop');
+      });
+      btn.addEventListener('drop', async (e) => {
+        if (!isOurDrag(e)) return;
+        e.preventDefault();
+        btn.classList.remove('is-drop');
+        await moveBookmark(Number(e.dataTransfer.getData(DRAG_TYPE)), key, name);
+      });
+    }
+
     li.append(btn);
     return li;
+  }
+
+  // ---------- 拖曳搬移 ----------
+  const DRAG_TYPE = 'application/x-workbench-bookmark';
+
+  async function moveBookmark(id, key, targetName) {
+    const b = state.bookmarks.find((x) => x.id === id);
+    if (!b) return;
+
+    let patch;
+    if (key === 'fav') {
+      if (b.is_favorite) return;
+      patch = { is_favorite: true };
+    } else if (key === 'none') {
+      if (!b.category_id) return;
+      patch = { category_id: null };
+    } else {
+      if (b.category_id === key) return;
+      patch = { category_id: key };
+    }
+    patch.updated_at = new Date().toISOString();
+
+    const { error } = await sb.from('bookmarks').update(patch).eq('id', id);
+    if (error) return fail(error);
+
+    Object.assign(b, patch);
+    renderCategories();
+    renderBookmarks();
+    toast(`「${b.title}」已移到「${targetName}」`);
   }
 
   // ---------- 書籤清單 ----------
@@ -244,12 +299,21 @@
   function bookmarkCard(b) {
     const card = document.createElement('div');
     card.className = 'card';
+    card.draggable = true;
+    card.title = '可拖到左側類別上搬移';
+    card.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData(DRAG_TYPE, String(b.id));
+      e.dataTransfer.effectAllowed = 'move';
+      card.classList.add('is-dragging');
+    });
+    card.addEventListener('dragend', () => card.classList.remove('is-dragging'));
 
     const img = document.createElement('img');
     img.className = 'card-icon';
     img.src = faviconOf(b.url);
     img.alt = '';
     img.loading = 'lazy';
+    img.draggable = false;   // 圖片預設可拖，會蓋掉卡片的拖曳
 
     const body = document.createElement('div');
     body.className = 'card-body';
@@ -259,6 +323,7 @@
     link.href = b.url;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
+    link.draggable = false;  // 連結預設可拖，會變成拖網址而不是拖卡片
     const t = document.createElement('span');
     t.textContent = b.title;
     link.append(t);

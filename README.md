@@ -11,6 +11,15 @@
 | `assets/style.css` | 版面與淺色/深色主題 |
 | `config.js` | Supabase URL 與 anon key |
 
+## 使用
+
+- 左側是類別，含「全部書籤」「最愛」，以及有未歸類書籤時才出現的「未分類」。
+- **拖曳搬移**：把書籤卡片拖到左側任一類別即可改歸屬；拖到「最愛」是加入最愛，
+  拖到「未分類」是清掉類別。「全部書籤」不是實際歸屬，不接受放置。
+  用的是 HTML5 drag and drop，觸控裝置沒有這個行為，請改用卡片上的 ✎ 編輯。
+- 卡片右上角 ✎ 可編輯或刪除；類別列 hover 後的 ✎ 可編輯或刪除類別。
+- 刪除是兩段式：第一次點「刪除」會變成「確定刪除？」，再點一次才真的刪。
+
 ## Supabase (`ckdb`)
 
 專案 ref：`skubqoeizqgbixaaxfeq`
@@ -77,6 +86,6 @@ python -m http.server 5173
 
 推上 `main` 後 GitHub Pages 會自動建置（約 1 分鐘）。
 
-`index.html` 引用資產時帶了版本參數（`assets/app.js?v=3`）。GitHub Pages 對靜態檔的
+`index.html` 引用資產時帶了版本參數（`assets/app.js?v=4`）。GitHub Pages 對靜態檔的
 `Cache-Control` 是 `max-age=600`，改了 JS/CSS 若不換版本號，瀏覽器會有最多 10 分鐘
 拿到舊檔。**每次改動 `assets/` 或 `config.js` 時請一併把 `?v=` 加一。**
