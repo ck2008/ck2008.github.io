@@ -64,18 +64,59 @@
     : window.matchMedia('(prefers-color-scheme: dark)').matches);
   themeToggle.addEventListener('change', () => applyTheme(themeToggle.checked));
 
-  // ---------- 側邊選單開合 ----------
+  /* ---------- 側邊選單 ----------
+     兩種狀態：釘選＝固定佔一欄；未釘選＝收起來，滑過左緣或 ☰ 才浮出。
+     預設未釘選。 */
   const btnMenu = $('#btnMenu');
-  function applySidebar(open) {
-    app.classList.toggle('is-collapsed', !open);
-    btnMenu.setAttribute('aria-expanded', String(open));
-    btnMenu.title = open ? '隱藏類別' : '顯示類別';
-    try { localStorage.setItem('wb-sidebar', open ? 'open' : 'closed'); } catch {}
+  const btnPin = $('#btnPin');
+  const sidebarEl = $('#sidebar');
+  const edgeTrigger = $('#edgeTrigger');
+  let pinned = false;
+  let peekTimer;
+
+  function setPeek(on) {
+    app.classList.toggle('is-peek', on && !pinned);
+    btnMenu.setAttribute('aria-expanded', String(pinned || on));
   }
-  let sidebarOpen = true;
-  try { sidebarOpen = localStorage.getItem('wb-sidebar') !== 'closed'; } catch {}
-  applySidebar(sidebarOpen);
-  btnMenu.addEventListener('click', () => applySidebar(app.classList.contains('is-collapsed')));
+
+  function applyPinned(on) {
+    pinned = on;
+    app.classList.toggle('is-pinned', on);
+    btnPin.classList.toggle('is-on', on);
+    btnPin.setAttribute('aria-pressed', String(on));
+    btnPin.title = on ? '取消釘選，改成滑過才顯示' : '釘選側欄';
+    btnMenu.title = on ? '取消釘選側欄' : '顯示類別（滑過左緣也會出現）';
+    if (on) app.classList.remove('is-peek');
+    btnMenu.setAttribute('aria-expanded', String(on));
+    try { localStorage.setItem('wb-sidebar-pinned', on ? 'yes' : 'no'); } catch {}
+  }
+
+  try { pinned = localStorage.getItem('wb-sidebar-pinned') === 'yes'; } catch {}
+  applyPinned(pinned);
+
+  btnPin.addEventListener('click', () => applyPinned(!pinned));
+  // 觸控裝置沒有 hover，所以 ☰ 也要能直接開關
+  btnMenu.addEventListener('click', () => {
+    if (pinned) applyPinned(false);
+    else setPeek(!app.classList.contains('is-peek'));
+  });
+
+  for (const el of [btnMenu, sidebarEl, edgeTrigger]) {
+    el.addEventListener('mouseenter', () => { clearTimeout(peekTimer); setPeek(true); });
+    el.addEventListener('mouseleave', () => {
+      peekTimer = setTimeout(() => setPeek(false), 250);   // 留一點時間讓滑鼠移過去
+    });
+    // 拖曳中不會觸發 mouseenter，要靠 dragenter 才能把書籤拖到收起來的側欄
+    el.addEventListener('dragenter', () => { clearTimeout(peekTimer); setPeek(true); });
+  }
+
+  // 拖曳結束後把浮出的側欄收回去，除非滑鼠還停在上面
+  document.addEventListener('dragend', () => {
+    clearTimeout(peekTimer);
+    peekTimer = setTimeout(() => {
+      if (!sidebarEl.matches(':hover')) setPeek(false);
+    }, 500);
+  });
 
   // ---------- 網站圖示開關 ----------
   const iconToggle = $('#iconToggle');
