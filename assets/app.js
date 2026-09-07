@@ -279,9 +279,9 @@
   }
 
   function renderBookmarks() {
-    const grid = $('#grid');
+    const host = $('#grid');
     const empty = $('#empty');
-    grid.textContent = '';
+    host.textContent = '';
 
     const titles = { all: '全部書籤', fav: '最愛', none: '未分類' };
     const cat = state.categories.find((c) => c.id === state.activeCategory);
@@ -293,7 +293,49 @@
       empty.textContent = state.query ? '找不到符合的書籤。' : '這裡還沒有書籤，按「＋ 新增書籤」開始。';
       return;
     }
+
+    // 單一類別的檢視裡每筆歸屬都一樣，不用再分段
+    if (state.activeCategory !== 'all' && state.activeCategory !== 'fav') {
+      host.append(bookmarkGrid(rows));
+      return;
+    }
+
+    // 跨類別的檢視：照類別順序分段，未分類擺最後，每段自成一列
+    const groups = [...state.categories, { id: null, name: '未分類', icon: '📭' }];
+    for (const g of groups) {
+      const part = rows.filter((b) => (b.category_id ?? null) === g.id);
+      if (!part.length) continue;
+      host.append(bookmarkGroup(g, part));
+    }
+  }
+
+  function bookmarkGrid(rows) {
+    const grid = document.createElement('div');
+    grid.className = 'grid';
     for (const b of rows) grid.append(bookmarkCard(b));
+    return grid;
+  }
+
+  function bookmarkGroup(category, rows) {
+    const sec = document.createElement('section');
+    sec.className = 'group';
+
+    const h = document.createElement('h3');
+    h.className = 'group-title';
+    if (category.icon) {
+      const ico = document.createElement('span');
+      ico.textContent = category.icon;
+      h.append(ico);
+    }
+    const nm = document.createElement('span');
+    nm.textContent = category.name;
+    const cnt = document.createElement('span');
+    cnt.className = 'group-count';
+    cnt.textContent = rows.length;
+    h.append(nm, cnt);
+
+    sec.append(h, bookmarkGrid(rows));
+    return sec;
   }
 
   function bookmarkCard(b) {
