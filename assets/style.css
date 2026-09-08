@@ -151,7 +151,7 @@ a{color:inherit;text-decoration:none}
 .card.is-drop-after::after{right:0}
 .card-icon{display:none}
 .card-body{min-width:0;flex:1;display:flex;align-items:center;justify-content:center;padding:0 44px;text-align:center}
-.card-title{width:100%;font-size:21px;line-height:1.35;font-weight:700;letter-spacing:-.015em;display:flex;align-items:center;justify-content:center;gap:6px}
+.card-title{width:100%;font-size:17.85px;line-height:1.35;font-weight:700;letter-spacing:-.015em;display:flex;align-items:center;justify-content:center;gap:6px}
 /* 標題連結撐滿整張卡片，點哪裡都算點到它。用連結而不是 click 事件，
    中鍵、Ctrl+click、右鍵選單和狀態列網址預覽才會照常運作。 */
 .card-title::after{content:"";position:absolute;inset:0;z-index:1}
