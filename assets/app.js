@@ -30,6 +30,7 @@
     query: '',
     sortBy: 'sort',
     showIcons: false,        // 網站圖示預設不顯示
+    cardStyle: 'classic',
   };
 
   // ---------- 小工具 ----------
@@ -194,6 +195,22 @@
     applyIcons(!state.showIcons);
     renderBookmarks();
   });
+
+  // ---------- 卡片風格 ----------
+  const cardStyleSelect = $('#cardStyle');
+  const CARD_STYLES = ['classic', 'google', 'mint', 'sunset'];
+  function applyCardStyle(style) {
+    const selected = CARD_STYLES.includes(style) ? style : 'classic';
+    state.cardStyle = selected;
+    cardStyleSelect.value = selected;
+    $('#grid').classList.remove(...CARD_STYLES.map((name) => `card-style-${name}`));
+    $('#grid').classList.add(`card-style-${selected}`);
+    try { localStorage.setItem('wb-card-style', selected); } catch {}
+  }
+  let savedCardStyle = 'classic';
+  try { savedCardStyle = localStorage.getItem('wb-card-style') || 'classic'; } catch {}
+  applyCardStyle(savedCardStyle);
+  cardStyleSelect.addEventListener('change', () => applyCardStyle(cardStyleSelect.value));
 
   // ---------- 認證 ----------
   $('#btnLogin').addEventListener('click', async () => {
