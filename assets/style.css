@@ -4,11 +4,13 @@
   --line:#dfe5f0; --brand:#4058c9; --brand-ink:#ffffff; --danger:#c83e4d;
   --shadow:0 1px 2px rgba(30,45,80,.04), 0 10px 24px -16px rgba(38,54,92,.26);
   --radius:14px;
+  --hover:#f97316;          /* 滑過卡片時整張染上的暖色 */
 }
 html[data-theme="dark"]{
   --bg:#101728; --panel:#182238; --panel-2:#202d46; --text:#edf2ff; --muted:#9ba9c1;
   --line:#2d3a55; --brand:#90a2ff; --brand-ink:#101728; --danger:#ff8992;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  --hover:#fb923c;   /* 深色底混橘比混琥珀乾淨，不會偏成墨綠 */
 }
 *{box-sizing:border-box}
 /* .gate / .app 自帶 display，會蓋過 UA 樣式的 [hidden]{display:none} */
@@ -117,13 +119,29 @@ a{color:inherit;text-decoration:none}
   font-variant-numeric:tabular-nums}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
 .card{position:relative;display:flex;gap:11px;padding:13px;background:var(--panel);border:1px solid var(--line);
-  border-radius:var(--radius);box-shadow:var(--shadow);min-height:104px;overflow:hidden;
-  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
-.card::before{content:"";position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,var(--brand),#8d9fff);opacity:0;transition:opacity .16s ease}
-.card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--brand) 50%,var(--line));box-shadow:0 14px 26px -17px rgba(38,54,92,.4)}
+  border-radius:var(--radius);box-shadow:var(--shadow);min-height:104px;overflow:hidden;cursor:grab;
+  transition:transform .16s ease,background-color .16s ease,border-color .16s ease,box-shadow .16s ease}
+.card::before{content:"";position:absolute;top:0;left:0;width:100%;height:3px;
+  background:linear-gradient(90deg,var(--hover),color-mix(in srgb,var(--hover) 55%,var(--panel)));
+  opacity:0;transition:opacity .16s ease}
+.card:hover{transform:translateY(-3px);background:color-mix(in srgb,var(--hover) 16%,var(--panel));
+  border-color:color-mix(in srgb,var(--hover) 60%,var(--line));
+  box-shadow:0 14px 26px -17px color-mix(in srgb,var(--hover) 55%,transparent)}
 .card:hover::before{opacity:1}
+/* 卡片染色後，裡面吃 --panel 當底的小元件要一起跟上，否則會浮成白塊 */
+.card:hover .card-icon,.card:hover .tag{background:color-mix(in srgb,var(--hover) 22%,var(--panel-2))}
+.card:hover .icon-btn{background:color-mix(in srgb,var(--hover) 12%,var(--panel))}
+.card:hover .icon-btn:hover{background:color-mix(in srgb,var(--hover) 30%,var(--panel))}
+.card a,.card .icon-btn{cursor:pointer}
 .card:active{cursor:grabbing}
 .card.is-dragging{opacity:.4}
+
+/* 拖曳排序時，卡片會插進去的那一側亮一條線。卡片是 overflow:hidden，
+   線只能畫在框內，所以貼著左右內緣。 */
+.card.is-drop-before::after,.card.is-drop-after::after{
+  content:"";position:absolute;top:6px;bottom:6px;width:3px;border-radius:3px;background:var(--brand)}
+.card.is-drop-before::after{left:0}
+.card.is-drop-after::after{right:0}
 .card-icon{width:30px;height:30px;border-radius:7px;flex:none;background:var(--panel-2);object-fit:contain}
 .card-body{min-width:0;flex:1}
 .card-title{font-weight:700;letter-spacing:-.015em;display:flex;align-items:center;gap:6px}

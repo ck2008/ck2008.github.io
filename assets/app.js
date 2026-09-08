@@ -319,8 +319,6 @@
 
     // 拖曳目標：把書籤卡片拖到這一列就換類別。「全部書籤」不是實際歸屬，不收。
     if (key !== 'all') {
-      const isOurDrag = (e) => e.dataTransfer.types.includes(DRAG_TYPE);
-
       btn.addEventListener('dragenter', (e) => {
         if (!isOurDrag(e)) return;
         e.preventDefault();
@@ -350,6 +348,21 @@
   // ---------- 拖曳搬移 ----------
   const DRAG_TYPE = 'application/x-workbench-bookmark';
 
+  /* dragover 期間拿不到 getData()，只能靠 types 判斷這是不是自家的拖曳，
+     免得把從桌面拖進來的檔案也當成書籤。 */
+  const isOurDrag = (e) => e.dataTransfer.types.includes(DRAG_TYPE);
+
+  // 目前畫著插入線的卡片。只會有一張，換位置前先擦掉舊的。
+  let dropMark = null;
+  function setDropMark(card, after) {
+    if (dropMark && dropMark !== card) dropMark.classList.remove('is-drop-before', 'is-drop-after');
+    dropMark = card;
+    if (!card) return;
+    card.classList.toggle('is-drop-before', !after);
+    card.classList.toggle('is-drop-after', after);
+  }
+  function clearDropMark() { setDropMark(null); }
+
   async function moveBookmark(id, key, targetName) {
     const b = state.bookmarks.find((x) => x.id === id);
     if (!b) return;
@@ -374,6 +387,59 @@
     renderCategories();
     renderBookmarks();
     toast(`「${b.title}」已移到「${targetName}」`);
+  }
+
+  /* 拖曳排序。sort_order 是全域欄位，只改動到的那幾筆會讓不同段之間撞號，
+     所以整份清單一起重編號 0..n-1，再只寫回真的變了的那幾筆。
+     categoryId 傳 undefined 代表這一格不代表任何類別（最愛、熱門），不動歸屬。 */
+  async function reorderBookmark(id, refId, after, categoryId) {
+    const b = state.bookmarks.find((x) => x.id === id);
+    if (!b) return;
+
+    const list = [...state.bookmarks].sort((x, y) => (x.sort_order - y.sort_order) || (x.id - y.id));
+    list.splice(list.indexOf(b), 1);
+    let at = list.findIndex((x) => x.id === refId);
+    if (at < 0) at = list.length; else if (after) at += 1;
+    list.splice(at, 0, b);
+
+    const catChanged = categoryId !== undefined && (b.category_id ?? null) !== (categoryId ?? null);
+    const plan = [];
+    list.forEach((row, i) => { if (row.sort_order !== i) plan.push({ row, sort_order: i }); });
+    if (catChanged && !plan.some((p) => p.row === b)) plan.push({ row: b, sort_order: b.sort_order });
+    if (!plan.length) return;
+
+    const now = new Date().toISOString();
+    const results = await Promise.all(plan.map((p) => {
+      const patch = { sort_order: p.sort_order, updated_at: now };
+      if (catChanged && p.row === b) patch.category_id = categoryId;
+      return sb.from('bookmarks').update(patch).eq('id', p.row.id);
+    }));
+    const bad = results.find((r) => r.error);
+    if (bad) return fail(bad.error);
+
+    for (const p of plan) p.row.sort_order = p.sort_order;
+    if (catChanged) b.category_id = categoryId;
+    renderCategories();
+    renderBookmarks();
+    if (catChanged) {
+      const target = state.categories.find((c) => c.id === categoryId);
+      toast(`「${b.title}」已移到「${target ? target.name : '未分類'}」`);
+    }
+  }
+
+  // 找出離游標最近的卡片，以及要插在它的左邊還右邊
+  function dropTarget(grid, x, y) {
+    let best = null;
+    let bestD = Infinity;
+    for (const c of grid.querySelectorAll('.card:not(.is-dragging)')) {
+      const r = c.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      // 直向距離加權，游標在哪一列就先咬那一列
+      const d = Math.hypot(x - cx, (y - cy) * 1.8);
+      if (d < bestD) { bestD = d; best = { card: c, after: x > cx }; }
+    }
+    return best;
   }
 
   // ---------- 書籤清單 ----------
@@ -410,6 +476,12 @@
     return rows.sort(cmp);
   }
 
+  /* 只有「自訂順序」下拖曳才有意義；照標題或加入時間排的時候，
+     把卡片放到別的位置畫面也不會照做。 */
+  const canReorder = () => state.sortBy === 'sort';
+  // 這一格代表哪個類別（拖進來就換歸屬）。最愛是跨類別的集合，不代表任何一個。
+  const groupIdOf = (key) => (key === 'none' ? null : (key === 'fav' ? undefined : key));
+
   function renderBookmarks() {
     const host = $('#grid');
     const empty = $('#empty');
@@ -428,7 +500,7 @@
 
     // 單一類別的檢視裡每筆歸屬都一樣，不用再分段
     if (state.activeCategory !== 'all' && state.activeCategory !== 'fav') {
-      host.append(bookmarkGrid(rows));
+      host.append(bookmarkGrid(rows, { reorder: canReorder(), categoryId: groupIdOf(state.activeCategory) }));
       return;
     }
 
@@ -475,7 +547,7 @@
     cnt.textContent = rows.length;
     h.append(ico, nm, cnt);
 
-    sec.append(h, bookmarkGrid(rows, { showCount: true }));
+    sec.append(h, bookmarkGrid(rows, { showCount: true, ranked: true }));
     return sec;
   }
 
@@ -489,7 +561,30 @@
     const grid = document.createElement('div');
     grid.className = 'grid';
     for (const b of rows) grid.append(bookmarkCard(b, opts));
+    if (opts && opts.reorder) makeSortable(grid, opts.categoryId);
     return grid;
+  }
+
+  function makeSortable(grid, categoryId) {
+    grid.addEventListener('dragover', (e) => {
+      if (!isOurDrag(e)) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const t = dropTarget(grid, e.clientX, e.clientY);
+      if (t) setDropMark(t.card, t.after);
+    });
+    grid.addEventListener('dragleave', (e) => {
+      if (!grid.contains(e.relatedTarget)) clearDropMark();
+    });
+    grid.addEventListener('drop', async (e) => {
+      if (!isOurDrag(e)) return;
+      e.preventDefault();
+      const t = dropTarget(grid, e.clientX, e.clientY);
+      clearDropMark();
+      if (!t) return;
+      await reorderBookmark(Number(e.dataTransfer.getData(DRAG_TYPE)),
+        Number(t.card.dataset.id), t.after, categoryId);
+    });
   }
 
   function bookmarkGroup(category, rows) {
@@ -509,21 +604,27 @@
     cnt.textContent = rows.length;
     h.append(nm, cnt);
 
-    sec.append(h, bookmarkGrid(rows));
+    sec.append(h, bookmarkGrid(rows, { reorder: canReorder(), categoryId: category.id }));
     return sec;
   }
 
   function bookmarkCard(b, opts) {
     const card = document.createElement('div');
     card.className = 'card';
+    card.dataset.id = b.id;
     card.draggable = true;
-    card.title = '可拖到左側類別上搬移';
+    card.title = (opts && opts.reorder) ? '可拖曳調整順序，或拖到左側類別上搬移'
+      : (opts && opts.ranked) ? '熱門依點擊次數排名，可拖到左側類別上搬移'
+      : '可拖到左側類別上搬移（切換成「自訂順序」才能調整位置）';
     card.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData(DRAG_TYPE, String(b.id));
       e.dataTransfer.effectAllowed = 'move';
       card.classList.add('is-dragging');
     });
-    card.addEventListener('dragend', () => card.classList.remove('is-dragging'));
+    card.addEventListener('dragend', () => {
+      card.classList.remove('is-dragging');
+      clearDropMark();
+    });
 
     // 關掉時連 img 都不建，省下每張卡片對 Google favicon 服務的請求
     let img = null;
