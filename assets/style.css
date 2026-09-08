@@ -194,6 +194,21 @@ a{color:inherit;text-decoration:none}
 .groups.card-style-cyan .icon-btn{background:rgba(255,255,255,.18);color:#fff}
 .groups.card-style-cyan .icon-btn:hover{background:rgba(255,255,255,.32);color:#fff}
 
+/* 筆記本拼色：每張卡片使用一種 NotebookLM 式的低飽和底色。 */
+.groups.card-style-notebook .card{
+  --hover:#64748b;background:var(--notebook-bg);border-color:transparent;box-shadow:none}
+.groups.card-style-notebook .card::before{display:none}
+.groups.card-style-notebook .card:hover{
+  transform:scale(1.04);background:color-mix(in srgb,var(--notebook-bg) 84%,#cbd5e1);
+  border-color:transparent;box-shadow:0 8px 16px -14px rgba(15,23,42,.5)}
+.groups.card-style-notebook .card-hits{color:#667085}
+.notebook-tone-lilac{--notebook-bg:#e8eaf8}
+.notebook-tone-sky{--notebook-bg:#dff2f8}
+.notebook-tone-sage{--notebook-bg:#f1f1e6}
+.notebook-tone-blush{--notebook-bg:#f8ece8}
+.notebook-tone-mauve{--notebook-bg:#f0e7ef}
+.notebook-tone-mint{--notebook-bg:#e0f1e5}
+
 /* 薄荷索引：保有摘要資訊，用輕盈的綠色底標記工作中的資源。 */
 .groups.card-style-mint .card{
   --hover:#0b9b75;background:linear-gradient(135deg,#f0fff8,#e2f8ef);border-color:#aee7d0;
