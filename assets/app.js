@@ -198,7 +198,7 @@
 
   // ---------- 卡片風格 ----------
   const cardStyleSelect = $('#cardStyle');
-  const CARD_STYLES = ['classic', 'blue', 'mint', 'sunset'];
+  const CARD_STYLES = ['classic', 'blue', 'cyan', 'mint', 'sunset'];
   function applyCardStyle(style) {
     const selected = CARD_STYLES.includes(style) ? style : 'classic';
     state.cardStyle = selected;
