@@ -171,13 +171,14 @@ a{color:inherit;text-decoration:none}
 .empty{text-align:center;color:var(--muted);padding:56px 0}
 
 /* ---------- 卡片風格 ---------- */
-/* 淡藍白字：保留原本卡片的尺寸、圓角與資訊密度，只改成清爽的藍色底。 */
+/* 藍白卡片：參考圖的純藍底白字，保留原本卡片的尺寸、圓角與資訊密度。 */
 .groups.card-style-blue .card{
-  --hover:#2879bd;background:#559bda;border-color:#559bda;color:#fff;
-  box-shadow:0 10px 22px -19px #1d70b7}
-.groups.card-style-blue .card:hover{background:#438dcd;border-color:#438dcd}
-.groups.card-style-blue .card-host,.groups.card-style-blue .card-desc{color:rgba(255,255,255,.82)}
-.groups.card-style-blue .card-hits{color:#e5f4ff}
+  --hover:#3977d6;background:#4a86e8;border-color:#4a86e8;color:#fff;
+  box-shadow:0 10px 22px -19px #2d62bd}
+.groups.card-style-blue .card::before{display:none}
+.groups.card-style-blue .card:hover{background:#3977d6;border-color:#3977d6}
+.groups.card-style-blue .card-title,.groups.card-style-blue .card-host,.groups.card-style-blue .card-desc,
+.groups.card-style-blue .card-hits,.groups.card-style-blue .fav{color:#fff}
 .groups.card-style-blue .tag{background:rgba(255,255,255,.18);color:#fff}
 .groups.card-style-blue .card-icon{background:rgba(255,255,255,.18)}
 .groups.card-style-blue .icon-btn{background:rgba(255,255,255,.18);color:#fff}
