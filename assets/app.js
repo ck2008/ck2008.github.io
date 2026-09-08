@@ -458,6 +458,7 @@
     const sec = document.createElement('section');
     sec.className = 'group';
     sec.id = 'hotSection';
+    sec.style.setProperty('--group-color', '#f59e0b');
     if (state.query) return sec;
 
     const rows = hotRows();
@@ -494,6 +495,7 @@
   function bookmarkGroup(category, rows) {
     const sec = document.createElement('section');
     sec.className = 'group';
+    sec.style.setProperty('--group-color', category.color || 'var(--brand)');
 
     const h = document.createElement('h3');
     h.className = 'group-title';

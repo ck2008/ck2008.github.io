@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>工作台 · 書籤</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
-<link rel="stylesheet" href="assets/style.css?v=12">
+<link rel="stylesheet" href="assets/style.css?v=13">
 </head>
 <body>
 
@@ -74,7 +74,11 @@
           <button id="btnAddBookmark" class="btn btn-primary">＋ 新增書籤</button>
         </div>
       </div>
-      <h1 id="viewTitle" class="view-title">全部書籤</h1>
+      <div class="view-heading">
+        <p class="view-kicker">PERSONAL INDEX</p>
+        <h1 id="viewTitle" class="view-title">全部書籤</h1>
+        <p class="view-description">把常用資源整理成隨時能回來的工作索引。</p>
+      </div>
       <div id="grid" class="groups"></div>
       <div id="empty" class="empty" hidden></div>
     </section>
@@ -128,6 +132,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=12"></script>
-<script src="assets/app.js?v=12"></script>
+<script src="assets/app.js?v=13"></script>
 </body>
 </html>
