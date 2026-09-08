@@ -123,8 +123,8 @@ a{color:inherit;text-decoration:none}
 .group-count{font-weight:650;font-size:11.5px;background:color-mix(in srgb,var(--group-color) 10%,var(--panel));color:var(--group-color);border-radius:99px;padding:2px 8px;
   font-variant-numeric:tabular-nums}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
-.card{position:relative;display:flex;gap:11px;padding:13px;background:var(--panel);border:1px solid var(--line);
-  border-radius:var(--radius);box-shadow:var(--shadow);min-height:104px;overflow:hidden;cursor:pointer;
+.card{position:relative;display:flex;align-items:center;justify-content:center;padding:6px 14px;height:52px;min-height:52px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;
   transition:transform .16s ease,background-color .16s ease,border-color .16s ease,box-shadow .16s ease}
 .card::before{content:"";position:absolute;top:0;left:0;width:100%;height:3px;
   background:linear-gradient(90deg,var(--hover),color-mix(in srgb,var(--hover) 55%,var(--panel)));
@@ -149,20 +149,17 @@ a{color:inherit;text-decoration:none}
   content:"";position:absolute;top:6px;bottom:6px;width:3px;border-radius:3px;background:var(--brand)}
 .card.is-drop-before::after{left:0}
 .card.is-drop-after::after{right:0}
-.card-icon{width:30px;height:30px;border-radius:7px;flex:none;background:var(--panel-2);object-fit:contain}
-.card-body{min-width:0;flex:1}
-.card-title{font-weight:700;letter-spacing:-.015em;display:flex;align-items:center;gap:6px}
+.card-icon{display:none}
+.card-body{min-width:0;flex:1;display:flex;align-items:center;justify-content:center;padding:0 44px;text-align:center}
+.card-title{width:100%;font-size:21px;line-height:1.1;font-weight:700;letter-spacing:-.015em;display:flex;align-items:center;justify-content:center;gap:6px}
 /* 標題連結撐滿整張卡片，點哪裡都算點到它。用連結而不是 click 事件，
    中鍵、Ctrl+click、右鍵選單和狀態列網址預覽才會照常運作。 */
 .card-title::after{content:"";position:absolute;inset:0;z-index:1}
 .card-title span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.card-host{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.card-hits{color:var(--brand);font-variant-numeric:tabular-nums}
-.card-desc{color:var(--muted);font-size:12.5px;margin-top:5px;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.card-host,.card-desc,.card-tags{display:none}
+.card-hits{position:absolute;top:50%;right:12px;z-index:2;transform:translateY(-50%);color:var(--brand);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tag{font-size:11px;padding:2px 7px;border-radius:99px;background:var(--panel-2);color:var(--muted)}
-.card-tools{position:absolute;top:8px;right:8px;display:flex;gap:2px;opacity:0;transition:opacity .12s;z-index:2}
+.card-tools{position:absolute;top:50%;left:8px;display:flex;gap:2px;opacity:0;transform:translateY(-50%);transition:opacity .12s;z-index:2}
 .card:hover .card-tools,.card:focus-within .card-tools{opacity:1}
 .icon-btn{border:0;background:var(--panel);border-radius:6px;cursor:pointer;color:var(--muted);
   width:24px;height:24px;display:grid;place-items:center;font-size:13px}

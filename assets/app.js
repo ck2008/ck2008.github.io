@@ -683,11 +683,11 @@
 
     body.append(link, host);
 
+    let hits = null;
     if (opts && opts.showCount) {
-      const hits = document.createElement('span');
+      hits = document.createElement('span');
       hits.className = 'card-hits';
       hits.textContent = `${b.click_count} 次`;
-      host.append(' · ', hits);
     }
 
     if (b.description) {
@@ -728,7 +728,9 @@
 
     tools.append(favBtn, editBtn);
     if (img) card.append(img);
-    card.append(body, tools);
+    card.append(body);
+    if (hits) card.append(hits);
+    card.append(tools);
     return card;
   }
 
