@@ -198,7 +198,8 @@
 
   // ---------- 卡片風格 ----------
   const cardStyleSelect = $('#cardStyle');
-  const CARD_STYLES = ['classic', 'blue', 'cyan', 'mint', 'sunset'];
+  const CARD_STYLES = ['classic', 'blue', 'cyan', 'mint', 'sunset', 'notebook'];
+  const NOTEBOOK_TONES = ['lilac', 'sky', 'sage', 'blush', 'mauve', 'mint'];
   function applyCardStyle(style) {
     const selected = CARD_STYLES.includes(style) ? style : 'classic';
     state.cardStyle = selected;
@@ -206,6 +207,9 @@
     $('#grid').classList.remove(...CARD_STYLES.map((name) => `card-style-${name}`));
     $('#grid').classList.add(`card-style-${selected}`);
     try { localStorage.setItem('wb-card-style', selected); } catch {}
+  }
+  function randomNotebookTone() {
+    return NOTEBOOK_TONES[Math.floor(Math.random() * NOTEBOOK_TONES.length)];
   }
   let savedCardStyle = 'classic';
   try { savedCardStyle = localStorage.getItem('wb-card-style') || 'classic'; } catch {}
@@ -630,6 +634,8 @@
   function bookmarkCard(b, opts) {
     const card = document.createElement('div');
     card.className = 'card';
+    // 筆記本拼色不保留色號；每次列表重繪時重新分配柔和底色。
+    card.classList.add(`notebook-tone-${randomNotebookTone()}`);
     card.dataset.id = b.id;
     card.draggable = true;
     card.title = (opts && opts.reorder) ? '可拖曳調整順序，或拖到左側類別上搬移'
