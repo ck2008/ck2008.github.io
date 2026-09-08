@@ -171,21 +171,17 @@ a{color:inherit;text-decoration:none}
 .empty{text-align:center;color:var(--muted);padding:56px 0}
 
 /* ---------- 卡片風格 ---------- */
-/* Google 膠囊：以參考圖的藍紫漸層做成緊湊、可快速掃讀的連結按鈕。 */
-.groups.card-style-google .grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
-.groups.card-style-google .card{
-  background:linear-gradient(112deg,#4776f3 0%,#6366f1 48%,#8b5cf6 100%);border-color:transparent;
-  border-radius:999px;box-shadow:0 10px 20px -14px #4f46e5;color:#fff;min-height:48px;padding:11px 18px}
-.groups.card-style-google .card::before{display:none}
-.groups.card-style-google .card:hover{
-  transform:translateY(-2px) scale(1.02);background:linear-gradient(112deg,#3e6ce8 0%,#584fe9 48%,#7c4ee8 100%);
-  border-color:transparent;box-shadow:0 15px 25px -15px #4338ca}
-.groups.card-style-google .card-icon{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.2)}
-.groups.card-style-google .card-host,.groups.card-style-google .card-desc,.groups.card-style-google .card-tags,.groups.card-style-google .card-hits{display:none}
-.groups.card-style-google .card-title{color:#fff}
-.groups.card-style-google .card-tools{top:50%;right:12px;transform:translateY(-50%)}
-.groups.card-style-google .icon-btn{background:rgba(255,255,255,.18);color:#fff;border-radius:50%}
-.groups.card-style-google .icon-btn:hover{background:rgba(255,255,255,.32);color:#fff}
+/* 淡藍白字：保留原本卡片的尺寸、圓角與資訊密度，只改成清爽的藍色底。 */
+.groups.card-style-blue .card{
+  --hover:#2879bd;background:#559bda;border-color:#559bda;color:#fff;
+  box-shadow:0 10px 22px -19px #1d70b7}
+.groups.card-style-blue .card:hover{background:#438dcd;border-color:#438dcd}
+.groups.card-style-blue .card-host,.groups.card-style-blue .card-desc{color:rgba(255,255,255,.82)}
+.groups.card-style-blue .card-hits{color:#e5f4ff}
+.groups.card-style-blue .tag{background:rgba(255,255,255,.18);color:#fff}
+.groups.card-style-blue .card-icon{background:rgba(255,255,255,.18)}
+.groups.card-style-blue .icon-btn{background:rgba(255,255,255,.18);color:#fff}
+.groups.card-style-blue .icon-btn:hover{background:rgba(255,255,255,.32);color:#fff}
 
 /* 薄荷索引：保有摘要資訊，用輕盈的綠色底標記工作中的資源。 */
 .groups.card-style-mint .card{

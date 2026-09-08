@@ -198,7 +198,7 @@
 
   // ---------- 卡片風格 ----------
   const cardStyleSelect = $('#cardStyle');
-  const CARD_STYLES = ['classic', 'google', 'mint', 'sunset'];
+  const CARD_STYLES = ['classic', 'blue', 'mint', 'sunset'];
   function applyCardStyle(style) {
     const selected = CARD_STYLES.includes(style) ? style : 'classic';
     state.cardStyle = selected;
@@ -209,6 +209,8 @@
   }
   let savedCardStyle = 'classic';
   try { savedCardStyle = localStorage.getItem('wb-card-style') || 'classic'; } catch {}
+  // 已使用舊版「Google 膠囊」的裝置，升級後繼續套用新版淡藍白字。
+  if (savedCardStyle === 'google') savedCardStyle = 'blue';
   applyCardStyle(savedCardStyle);
   cardStyleSelect.addEventListener('change', () => applyCardStyle(cardStyleSelect.value));
 
