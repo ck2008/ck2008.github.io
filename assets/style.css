@@ -286,3 +286,6 @@ a{color:inherit;text-decoration:none}
   .grid{grid-template-columns:1fr;gap:10px}
   .user span{display:none}
 }
+
+/* 圖示開關啟用時才會由 JavaScript 建立 .card-icon 元素。 */
+.card-icon{display:block;width:24px;height:24px;flex:none;object-fit:contain;border-radius:6px}
