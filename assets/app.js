@@ -275,6 +275,101 @@
     toast('讀取失敗：' + error.message);
   }
 
+  // ---------- 匯出 HTML ----------
+  /* 匯出所有書籤，不受目前選取類別、搜尋字串或排序方式影響。
+     產出的檔案不依賴本網站或 Supabase，可直接用瀏覽器離線開啟。 */
+  $('#btnExportHtml').addEventListener('click', exportHtml);
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, (char) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
+    }[char]));
+  }
+
+  // 匯出檔不能保留 javascript:、data: 等可執行的 URL。
+  function exportUrl(value) {
+    try {
+      const url = new URL(value);
+      return /^https?:$/.test(url.protocol) ? url.href : '#';
+    } catch { return '#'; }
+  }
+
+  function exportHtml() {
+    if (!state.bookmarks.length) {
+      toast('沒有可匯出的書籤。');
+      return;
+    }
+
+    const orderedCategories = [...state.categories]
+      .sort((a, b) => (a.sort_order - b.sort_order) || (a.id - b.id));
+    const groups = [...orderedCategories, { id: null, name: '未分類', icon: '📭' }]
+      .map((category) => ({
+        category,
+        rows: state.bookmarks
+          .filter((bookmark) => (bookmark.category_id ?? null) === category.id)
+          .sort((a, b) => (a.sort_order - b.sort_order) || (a.id - b.id)),
+      }))
+      .filter((group) => group.rows.length);
+
+    const sections = groups.map(({ category, rows }) => {
+      const cards = rows.map((bookmark) => {
+        const description = bookmark.description
+          ? `<p class="description">${escapeHtml(bookmark.description)}</p>` : '';
+        const tags = (bookmark.tags || []).filter(Boolean)
+          .map((tag) => `<span class="tag">#${escapeHtml(tag)}</span>`).join('');
+        return `      <article class="bookmark">
+        <a href="${escapeHtml(exportUrl(bookmark.url))}" target="_blank" rel="noopener noreferrer">${escapeHtml(bookmark.title)}</a>${bookmark.is_favorite ? ' <span class="favorite" title="最愛">★</span>' : ''}
+        <p class="url">${escapeHtml(hostOf(bookmark.url))}</p>${description}${tags ? `
+        <p class="tags">${tags}</p>` : ''}
+      </article>`;
+      }).join('\n');
+      return `  <section>
+    <h2>${escapeHtml(category.icon || '📁')} ${escapeHtml(category.name)} <small>${rows.length}</small></h2>
+    <div class="grid">
+${cards}
+    </div>
+  </section>`;
+    }).join('\n\n');
+
+    const generatedAt = new Date();
+    const html = `<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我的書籤</title>
+<style>
+:root { color-scheme: light dark; --bg:#f7f7f7; --panel:#fff; --text:#171717; --muted:#666; --line:#dedede; --brand:#10a37f; }
+@media (prefers-color-scheme:dark) { :root { --bg:#171717; --panel:#212121; --text:#f5f5f5; --muted:#b4b4b4; --line:#3d3d3d; --brand:#1fc99b; } }
+* { box-sizing:border-box; } body { max-width:1200px; margin:0 auto; padding:40px 28px 72px; background:var(--bg); color:var(--text); font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif; }
+h1 { margin:0; font-size:30px; letter-spacing:-.04em; } .meta { margin:6px 0 36px; color:var(--muted); } section { margin:0 0 34px; } h2 { display:flex; gap:8px; align-items:center; margin:0 0 12px; font-size:16px; } h2 small { padding:1px 8px; border-radius:999px; background:color-mix(in srgb,var(--brand) 12%,transparent); color:var(--brand); font-size:12px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(245px,1fr)); gap:12px; } .bookmark { min-width:0; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--panel); } .bookmark > a { color:var(--text); font-size:16px; font-weight:700; text-decoration:none; overflow-wrap:anywhere; } .bookmark > a:hover { color:var(--brand); text-decoration:underline; } .favorite { color:#f59e0b; } .url,.description,.tags { margin:6px 0 0; } .url { color:var(--muted); font-size:12px; overflow-wrap:anywhere; } .description { color:var(--muted); } .tag { display:inline-block; margin:3px 4px 0 0; padding:2px 7px; border-radius:999px; background:color-mix(in srgb,var(--brand) 12%,transparent); color:var(--brand); font-size:12px; }
+@media (max-width:600px) { body { padding:28px 16px 52px; } }
+</style>
+</head>
+<body>
+<h1>🗂️ 我的書籤</h1>
+<p class="meta">共 ${state.bookmarks.length} 筆 · 匯出於 ${escapeHtml(generatedAt.toLocaleString('zh-TW'))}</p>
+${sections}
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const link = document.createElement('a');
+    const date = generatedAt.toISOString().slice(0, 10);
+    link.href = URL.createObjectURL(blob);
+    link.download = `bookmarks-${date}.html`;
+    link.hidden = true;
+    document.body.append(link);
+    link.click();
+    // 下載會在 click 後才由瀏覽器排程，延後釋放避免慢速瀏覽器取不到 Blob。
+    setTimeout(() => {
+      URL.revokeObjectURL(link.href);
+      link.remove();
+    }, 1000);
+    toast(`已匯出 ${state.bookmarks.length} 筆書籤。`);
+  }
+
   // ---------- 側邊類別 ----------
   function countFor(key) {
     if (key === 'all') return state.bookmarks.length;
